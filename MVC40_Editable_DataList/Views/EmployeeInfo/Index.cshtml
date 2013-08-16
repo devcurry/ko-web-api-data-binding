@@ -1,0 +1,167 @@
+﻿@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+<script src="~/Scripts/jquery-1.9.1.min.js"></script>
+<script src="~/Scripts/knockout-2.2.1.js"></script>
+
+<!--HTML Element UI-->
+
+<div id="dvemplist" data-bind="template: { name: currentTemplateSelector, foreach: Employees }"></div>
+
+<!--Ends Here-->
+
+<!--Templates-->
+
+<!--View Template-->
+<script type="text/html" id="viewtemplate">
+    <table border="1">
+        <tr>
+            <td>EmpNo</td>
+            <td>
+                <span data-bind="text: $data.EmpNo"></span>
+            </td>
+        </tr>
+        <tr>
+            <td>EmpName</td>
+            <td>
+                <span data-bind="text: $data.EmpName"></span>
+            </td>
+        </tr>
+        <tr>
+            <td>Salary</td>
+            <td>
+                <span data-bind="text: $data.Salary"></span>
+            </td>
+        </tr>
+        <tr>
+            <td>DeptName</td>
+            <td>
+                <span data-bind="text: $data.DeptName"></span>
+            </td>
+        </tr>
+        <tr>
+            <td>Designation</td>
+            <td>
+                <span data-bind="text: $data.Designation"></span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <button data-bind="click: $root.changeTemplate">Edit</button>
+            </td>
+            <td>
+            </td>
+        </tr>
+    </table>
+</script>
+<!--Ends Here-->
+
+<!--Edit Template-->
+<script id="edittemplate" type="text/html">
+    <table border="1">
+        <tr>
+            <td>EmpNo</td>
+            <td>
+                <span data-bind="text: $data.EmpNo"></span>
+            </td>
+        </tr>
+        <tr>
+            <td>EmpName</td>
+            <td>
+                <input type="text" data-bind="value: $data.EmpName" />
+            </td>
+        </tr>
+        <tr>
+            <td>Salary</td>
+            <td>
+                <input type="text" data-bind="value: $data.Salary" />
+            </td>
+        </tr>
+        <tr>
+            <td>DeptName</td>
+            <td>
+                <input type="text" data-bind="value: $data.DeptName" />
+            </td>
+        </tr>
+        <tr>
+            <td>Designation</td>
+            <td>
+                <input type="text" data-bind="value: $data.Designation" />
+            </td>
+        </tr>
+        <tr>
+            <td>                
+            </td>
+            <td>
+                <input type="button" id="btnsave" value="Save" />
+                <input type="button" id="btncancel" value="Cancel" />
+            </td>
+        </tr>
+    </table>
+</script>
+<!--Ends Here-->
+<!--Ends Here-->
+
+<!--The View Model where the Data Information will be specified-->
+<script type="text/javascript">
+    var EmpViewModel = function ()
+    {
+        var self = this;
+
+        //The default Template Value set to the "viewtemplate"
+
+        self.currentTemplate = ko.observable("viewtemplate");
+
+        self.Employees = ko.observableArray([]);
+
+
+
+        getrecords();
+
+        //Function To Retrive Data from using ajax call to WEB API
+        function getrecords()
+        {
+            $.ajax({
+                type: "GET",
+                url: "http://localhost:1902/api/EmployeeInfoAPI",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (data)
+                {
+                    //alert("Done");
+                    self.Employees(data);
+                },
+                error: function (err)
+                {
+                    alert("Error : " + err.status + "   " + err.statusText);
+                }
+            });
+        };
+        //Ends Here
+
+
+        //Method called when the template is to be changed 
+        self.changeTemplate = function ()
+        {
+            self.currentTemplate(self.currentTemplate() === "viewtemplate" ? "edittemplate" : "viewtemplate");
+        };
+
+        var tmpl;
+        self.currentTemplateSelector = function (vm)
+        {
+            if (!tmpl)
+            {
+                tmpl = ko.computed(function ()
+                {
+                    return self.currentTemplate();
+                }, vm);
+            }
+            return tmpl();
+        }
+    };
+
+    ko.applyBindings(new EmpViewModel());
+</script>
+<!--Ends Here-->

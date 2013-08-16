@@ -1,0 +1,187 @@
+﻿@{
+    ViewBag.Title = "ListData";
+}
+
+<h2>ListData</h2>
+<style type="text/css">
+    table {
+      width:400px;
+    }
+    td {
+        width:200px;
+    }
+</style>
+<script src="~/Scripts/jquery-1.9.1.min.js"></script>
+<script src="~/Scripts/knockout-2.2.1.js"></script>
+
+ 
+<!--The HTML UI-->
+ <div id="dvemplist" data-bind="template: { name: templateDisplayed, foreach: Emps }"></div>
+
+
+<!--Templates-->
+
+<!--View Template-->
+<script type="text/html" id="viewtemplate">
+    <table border="1">
+        <tr>
+            <td>EmpNo</td>
+            <td>
+                <span data-bind="text: $data.EmpNo"></span>
+            </td>
+        </tr>
+        <tr>
+            <td>EmpName</td>
+            <td>
+                <span data-bind="text: $data.EmpName"></span>
+            </td>
+        </tr>
+        <tr>
+            <td>Salary</td>
+            <td>
+                <span data-bind="text: $data.Salary"></span>
+            </td>
+        </tr>
+        <tr>
+            <td>DeptName</td>
+            <td>
+                <span data-bind="text: $data.DeptName"></span>
+            </td>
+        </tr>
+        <tr>
+            <td>Designation</td>
+            <td>
+                <span data-bind="text: $data.Designation"></span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+             <button data-bind="click: function () { EmpModel.editRecordtemplate($data); }">Edit</button>
+            </td>
+            
+        </tr>
+    </table>
+</script>
+<!--Ends Here-->
+
+<!--Edit Template-->
+<script id="edittemplate" type="text/html">
+<table border="1" style="background-color:azure">
+    <tr>
+        <td>EmpNo</td>
+        <td>
+             <input type="text" data-bind="value: $data.EmpNo" disabled="disabled"/>
+        </td>
+    </tr>
+     <tr>
+        <td>EmpName</td>
+        <td>
+            <input type="text" data-bind="value: $data.EmpName"/>
+        </td>
+    </tr>
+     <tr>
+        <td>Salary</td>
+        <td>
+            <input type="text" data-bind="value: $data.Salary"/>
+        </td>
+    </tr>
+     <tr>
+        <td>DeptName</td>
+        <td>
+            <input type="text" data-bind="value: $data.DeptName"/>
+        </td>
+    </tr>
+    <tr>
+        <td>Designation</td>
+        <td>
+            <input type="text" data-bind="value: $data.Designation"/>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <input type="button" id="btnsave"  value="Save" data-bind="click: EmpModel.Save"/>
+        </td>
+        <td>
+             <input type="button" id="btncancel"  value="Cancel" data-bind="click: function () { EmpModel.resettemplate(); }"/>
+        </td>
+    </tr>
+</table>
+</script>
+<!--Ends Here-->
+<!--Ends Here-->
+
+<script type="text/javascript">
+    var Employees = [];
+    var self = this;
+   
+    self.Data = ko.observableArray([]);
+    getrecords();
+   
+    //Function To Retrive Data from using ajax call to WEB API
+    function getrecords() {
+   
+        $.ajax({
+            type: "GET",
+            url: "http://localhost:1902/api/EmployeeInfoAPI",
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+                Employees = data;
+                self.Data(data);
+            },
+            error: function (err) {
+                alert("Error : " + err.status + "   " + err.statusText);
+            } 
+        });
+    };
+  
+     
+   
+        alert("Loading Data");
+   
+        
+    var EmpModel = {
+        Emps:self.Data(),
+        viewRecordtemplate: ko.observable("viewtemplate"),
+        editRecordtemplate: ko.observable()
+    };
+    
+  
+    EmpModel.templateDisplayed = function (t) {
+        return t === this.editRecordtemplate() ? 'edittemplate' : this.viewRecordtemplate();
+    }.bind(EmpModel);
+
+    //Method to Save the Updated Record
+    EmpModel.Save = function (t) {
+        var Employee = {};
+        Employee.EmpNo = t.EmpNo;
+        Employee.EmpName = t.EmpName;
+        Employee.Salary = t.Salary;
+        Employee.DeptName = t.DeptName;
+        Employee.Designation = t.Designation;
+        $.ajax({
+            type: "PUT",
+            url: "http://localhost:1902/api/EmployeeInfoAPI/" + Employee.EmpNo,
+            data: Employee,
+            success: function (data)
+            {
+                alert("Record Updated Successfully " + data.status);
+                EmpModel.resettemplate(); //Reset the Template 
+            },
+            error: function (err)
+            {
+                alert("Error Occures, Please Reload the Page and Try Again " + err.status);
+                // location.reload(); //REload the Page
+                EmpModel.resettemplate(t); //Reset the Template 
+            }
+        });
+ 
+    };
+
+    //Method to Reset theEdit View
+    EmpModel.resettemplate = function (t) {
+        this.editRecordtemplate("viewtemplate");
+    };
+
+    ko.applyBindings(EmpModel);
+</script>
